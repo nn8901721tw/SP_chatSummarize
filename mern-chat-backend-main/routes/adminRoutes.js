@@ -1,74 +1,95 @@
 const router = require('express').Router();
 const Message = require('../models/Message');
 const { spawn } = require('child_process');
+const { exec } = require('child_process');
+const execSync = require("child_process").execSync;
 const { log } = require('console');
 const fs = require('fs');
 const path = require('path');
 
-//NLP MODEL
+
+function runPythonScript(inputData) {
+    const pythonScriptPath = path.join(__dirname, '../../python1/model.py');
+    const command = `python ${pythonScriptPath} "${JSON.stringify(inputData).replace(/"/g, '\\"')}"`;
+    const output = execSync(command);
+    return output.toString();
+}
+
+
+//NLP MODEL_exec
 router.get('/inference', async (req, res) => {
     const { to } = req.query;
     console.log(to);
     try {
-
         const messages = await Message.find({ to }, 'from.name content');
         const inputData = {
             text: messages.reduce((accumulator, message) => {
                 return `${accumulator}${message.from.name}: ${message.content} `;
-            }, '')
+            }, "")
         };
         console.log(inputData);
-        console.log(typeof (inputData));
-        //////////////////////////////////////////////////////////////////////////////////
-        // const messages = await Message.find({ to }, 'content');
-        // res.send(messages);
-        // const inputData = messages.map(message => message.content);
-        //////////////////////////////////////////////////////////////////////////////////
-        // // 將收到的訊息轉成文字檔
-        // fs.writeFileSync('D:/user/Desktop/MERN/mernchat/python1/img/data.txt', JSON.stringify(contents));
-        // 將數據作為JSON字符串傳遞給Python腳本
+        const output = runPythonScript(inputData);
 
-        //範例data
-        // const inputData = {
-        //     text: "Jeff: Can I train a Transformers model on Amazon SageMaker? Philipp: Sure you can use the new Hugging Face Deep Learning Container. Jeff: ok. Jeff: and how can I get started? Jeff: where can I find documentation? Philipp: ok, ok you can find everything here.",
-        // };
-        const pythonProcess = spawn('python', ['D:/user/Desktop/MERN/SP_mernchat/python1/model.py', JSON.stringify(inputData)]);
-        let data1 = "";
-        pythonProcess.stdout.on('data', (data) => {
-            console.log(`Python output: ${data}`);
-            data1 = data;
-            // res.redirect(302, '/chat/inferenceResult?data=' + encodeURIComponent(data));
-        });
-
-        // pythonProcess.stdout.on('end', () => {
-        //     console.log(`Python process exited with code 0 and output: ${data1}`);
-        //     window.location.href = `/chat/inferenceResult?data=${encodeURIComponent(data1)}`;
-        // });
-
-        const redirectUrl = '/chat/inferenceResult';
-        pythonProcess.stdout.on('end', () => {
-            console.log(`Python process exited with code 0 and output: ${data1}`);
-            const encodedData = encodeURIComponent(data1);
-            const url = `${redirectUrl}?data=${encodedData}`;
-            // 將url傳遞給前端
-            res.send({ url });
-        });
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`);
-            res.sendStatus(500);
-        });
-        // pythonProcess.on('close', (code) => {
-        //     if (code !== 0) {
-        //         console.error(`Python process exited with code ${code}`);
-        //         res.sendStatus(500);
-        //     }
-        // });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send(err);
+        // 在這裡處理回傳的結果
+        res.send(output);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Error running Python script');
     }
 });
+
+// NLP MODEL _spawn
+// router.get('/inference', async (req, res) => {
+//     const { to } = req.query;
+//     console.log(to);
+//     try {
+
+//         const messages = await Message.find({ to }, 'from.name content');
+//         const inputData = {
+//             text: messages.reduce((accumulator, message) => {
+//                 return `${accumulator}${message.from.name}: ${message.content} `;
+//             }, '')
+//         };
+//         console.log(inputData);
+//         console.log(typeof (inputData));
+
+//         const pythonScriptPath = path.join(__dirname, '../../python1/model.py');
+//         const pythonProcess = spawn('python', [pythonScriptPath, JSON.stringify(inputData)]);
+
+//         let data1 = "";
+//         pythonProcess.stdout.on('data', (data) => {
+//             console.log(`Python output: ${data}`);
+//             data1 = data;
+//         });
+
+//         const redirectUrl = '/chat/inferenceResult';
+//         pythonProcess.stdout.on('end', () => {
+//             console.log(`Python process exited with code 0 and output: ${data1}`);
+//             res.send("data1");
+//             // try {
+//             //     const inferenceResult = JSON.parse(data1);
+//             //     const resultData = {
+//             //         data: inferenceResult,
+//             //         messages: messages.map((message) => {
+//             //             return {
+//             //                 from: message.from.name,
+//             //                 content: message.content
+//             //             };
+//             //         })
+//             //     };
+//             //     res.json(resultData);
+//             // } catch (error) {
+//             //     console.error(`Error parsing inference result: ${error}`);
+//             //     res.status(500).send({ error: 'Error parsing inference result.' });
+//             // }
+//         });
+
+
+// //     } catch (err) {
+// //         console.error(err);
+// //         res.status(500).send(err);
+// //     }
+// // });
 
 
 

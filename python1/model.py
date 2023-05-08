@@ -4,10 +4,13 @@ import json
 import os
 
 
-# 讀取nodejs傳遞過來的JSON字符串
+# # 讀取nodejs傳遞過來的JSON字符串
 data = json.loads(sys.argv[1])
 text = data['text']
 
+# input_data = sys.stdin.readline()
+# data = json.loads(input_data)
+# text = data['text']
 # 在這裡進行你的文字雲生成程序，產生圖像檔案
 
 # 將圖像檔案保存到指定路徑
@@ -38,9 +41,9 @@ summary_ids = model.generate(
 summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
 # 顯示摘要
-# print(summary)
+print(summary)
 
-print("summary")
+# print(json.dumps({'summary': summary}))
 
 # import sys
 # import json

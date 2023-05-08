@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { useSelector } from "react-redux";
@@ -5,13 +6,19 @@ import { AppContext } from "../context/appContext";
 import "./MessageForm.css";
 // import { useWordCloudMutation } from "../services/appApi";
 import axios from 'axios';
+import HandleClickInference from './handleClickInference';
+
 // const { spawn } = require('child_process');
 
 function MessageForm() {
+    const [inferenceLoading, setInferenceLoading] = useState(false);
+    const [inferenceData, setInferenceData] = useState(null); // 新增一個狀態 data
     const [message, setMessage] = useState("");
     const user = useSelector((state) => state.user);
-    const { socket, currentRoom, setMessages, messages, privateMemberMsg } = useContext(AppContext);
+    const { socket, currentRoom, setMessages, messages, privateMemberMsg, showInferenceData } = useContext(AppContext);
     const messageEndRef = useRef(null);
+    let navigate = useNavigate();
+
 
 
 
@@ -61,11 +68,13 @@ function MessageForm() {
     //  wordcloud click
     async function handleClickWordcloud() {
         try {
-            const response = await axios.get('http://localhost:5001/admin/wordCloud?to=' + currentRoom);
-            const data = response.data;
-            const contents = data.map(message => message.content);
-            console.log(contents);
-            console.log(typeof (contents));
+            // setIsLoading(true);
+            // const response = await axios.get('http://localhost:5001/admin/wordCloud?to=' + currentRoom);
+            // const data = response.data;
+            // const contents = data.map(message => message.content);
+            // console.log(contents);
+            // console.log(typeof (contents));
+            // setIsLoading(false);
             // 處理從後端獲取的資料
 
 
@@ -79,12 +88,24 @@ function MessageForm() {
     //  Inference click
     async function handleClickInference() {
         try {
+            setInferenceLoading(true);
             const response = await axios.get('http://localhost:5001/admin/inference?to=' + currentRoom);
-            const data = response.data;
-            const contents = data.map(message => message.content);
-            console.log(contents);
-            console.log(typeof (contents));
+            console.log("QQQQQQQQQQQQ");
+            const data = response;
+
+            // console.log(typeof (data));
+            const parsedData = data; // 將 string 轉換為物件
+            console.log(parsedData); // 印出轉換後的物件
+            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA"); // 印出轉換後的物件
+            setInferenceData(parsedData);
+            setInferenceLoading(false);
             // 處理從後端獲取的資料
+            console.log(typeof (parsedData));
+
+            // 將資料傳遞並跳轉到另一個頁面
+
+            showInferenceData(parsedData);
+            navigate('/inferenceResult');
 
         } catch (error) {
             console.log(error);
@@ -143,8 +164,10 @@ function MessageForm() {
                 </Row>
                 <Row>
                     <Col md={2}>
-                        <Button variant="primary" onClick={handleClickInference}> INFERENCE </Button>
+                        <Button variant="primary" onClick={handleClickInference} disabled={inferenceLoading}> {inferenceLoading ? 'Loading...' : 'INFERENCE'} </Button>
                     </Col>
+                    {/* <HandleClickInference currentRoom={currentRoom} /> */}
+
                     <Col md={1}>
                         <Button variant="danger" onClick={handleClickWordcloud}> WORDCLOUD </Button>
                     </Col>

@@ -95,7 +95,9 @@ io.on('connection', (socket) => {
 app.get('/rooms', (req, res) => {
   res.json(rooms)
 })
-
+app.get('/room123', (req, res) => {
+  res.json("rooms")
+})
 
 
 app.get('/api/data/1', (req, res) => {

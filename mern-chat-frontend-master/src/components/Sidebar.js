@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppContext } from "../context/appContext";
 import { addNotifications, resetNotifications } from "../features/userSlice";
 import "./Sidebar.css";
+import { v4 as uuidv4 } from 'uuid';
 
 function Sidebar() {
     const user = useSelector((state) => state.user);
@@ -70,14 +71,14 @@ function Sidebar() {
             <h2>Available rooms</h2>
             <ListGroup>
                 {rooms.map((room, idx) => (
-                    <ListGroup.Item key={idx} onClick={() => joinRoom(room)} active={room == currentRoom} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between" }}>
+                    <ListGroup.Item key={uuidv4()} onClick={() => joinRoom(room)} active={room == currentRoom} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between" }}>
                         {room} {currentRoom !== room && <span className="badge rounded-pill bg-primary">{user.newMessages[room]}</span>}
                     </ListGroup.Item>
                 ))}
             </ListGroup>
             <h2>Members</h2>
             {members.map((member) => (
-                <ListGroup.Item key={member.id} style={{ cursor: "pointer" }} active={privateMemberMsg?._id == member?._id} onClick={() => handlePrivateMemberMsg(member)} disabled={member._id === user._id}>
+                <ListGroup.Item key={uuidv4()} style={{ cursor: "pointer" }} active={privateMemberMsg?._id == member?._id} onClick={() => handlePrivateMemberMsg(member)} disabled={member._id === user._id}>
                     <Row>
                         <Col xs={2} className="member-status">
                             <img src={member.picture} className="member-status-img" />
