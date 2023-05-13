@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const Message = require('../models/Message');
+const Process = require('../models/Process');
 const { spawn } = require('child_process');
 const { exec } = require('child_process');
 const execSync = require("child_process").execSync;
@@ -18,8 +19,9 @@ function runPythonScript(inputData) {
 
 //NLP MODEL_exec
 router.get('/inference', async (req, res) => {
-    const { to } = req.query;
+    const { to, user } = req.query;       //接收到的user為 Json string 格式
     console.log(to);
+    console.log("user :" + user);
     try {
         const messages = await Message.find({ to }, 'from.name content');
         const inputData = {
@@ -30,6 +32,31 @@ router.get('/inference', async (req, res) => {
         console.log(inputData);
         const output = runPythonScript(inputData);
 
+        const userData = JSON.parse(user);          // 將user從 Json string 格式 轉為 Json Object
+
+        console.log("userData為" + userData);
+        const { name, email, status, _id, __v } = userData;
+        const formattedUser = {
+            name,
+            email,
+            status,
+            _id,
+            __v
+        };
+        console.log("format :  是" + typeof (formattedUser) + name + "END");
+
+        const currentTime = Date.now();
+
+        const newProcess = await Process.create({
+            result: output,
+            from: formattedUser,
+            to,
+            createdAt: currentTime
+        });
+
+
+        console.log(newProcess);
+
         // 在這裡處理回傳的結果
         res.send(output);
     } catch (error) {
@@ -37,6 +64,27 @@ router.get('/inference', async (req, res) => {
         res.status(500).send('Error running Python script');
     }
 });
+
+// 呈現 Inference後的結果 ，在 Process Component 呈現 。
+router.get('/process', async (req, res) => {
+    const { fromId } = req.query;
+
+    try {
+        let query = {};
+
+        if (fromId) {
+            query = { 'from._id': fromId };
+        }
+
+        const processData = await Process.find(query);
+        res.json(processData);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Error retrieving Process data');
+    }
+});
+
+
 
 // NLP MODEL _spawn
 // router.get('/inference', async (req, res) => {

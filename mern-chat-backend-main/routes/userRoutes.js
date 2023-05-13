@@ -10,6 +10,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(user);
   } catch (e) {
     let msg;
+
     if (e.code == 11000) {
       msg = "User already exists"
     } else {

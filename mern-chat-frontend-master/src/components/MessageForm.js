@@ -19,10 +19,6 @@ function MessageForm() {
     const messageEndRef = useRef(null);
     let navigate = useNavigate();
 
-
-
-
-    // const [wordcloud] = useWordCloudMutation();
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -65,6 +61,45 @@ function MessageForm() {
         socket.emit("message-room", roomId, message, user, time, todayDate);
         setMessage("");
     }
+
+    //  Inference click
+    async function handleClickInference() {
+        try {
+            setInferenceLoading(true);
+            // const response = await axios.get('http://localhost:5001/admin/inference?to=' + currentRoom + "&user=" + user);
+
+            const params = new URLSearchParams();
+            params.append('to', currentRoom);
+            params.append('user', JSON.stringify(user));
+
+            const response = await axios.get(`http://localhost:5001/admin/inference?${params.toString()}`);
+
+
+            const data = response;
+
+            // console.log(typeof (data));
+            const parsedData = data; // 將 string 轉換為物件
+            console.log(parsedData); // 印出轉換後的物件
+
+            setInferenceData(parsedData);
+            setInferenceLoading(false);
+            // 處理從後端獲取的資料
+            console.log(typeof (parsedData));
+
+            // 將資料傳遞並跳轉到另一個頁面
+
+            showInferenceData(parsedData);
+
+
+
+            // navigate(`/inferenceResult?currentRoom=${currentRoom}`);
+
+        } catch (error) {
+            console.log(error);
+            // 處理錯誤
+        }
+    }
+
     //  wordcloud click
     async function handleClickWordcloud() {
         try {
@@ -79,33 +114,6 @@ function MessageForm() {
 
 
 
-
-        } catch (error) {
-            console.log(error);
-            // 處理錯誤
-        }
-    }
-    //  Inference click
-    async function handleClickInference() {
-        try {
-            setInferenceLoading(true);
-            const response = await axios.get('http://localhost:5001/admin/inference?to=' + currentRoom);
-            console.log("QQQQQQQQQQQQ");
-            const data = response;
-
-            // console.log(typeof (data));
-            const parsedData = data; // 將 string 轉換為物件
-            console.log(parsedData); // 印出轉換後的物件
-            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA"); // 印出轉換後的物件
-            setInferenceData(parsedData);
-            setInferenceLoading(false);
-            // 處理從後端獲取的資料
-            console.log(typeof (parsedData));
-
-            // 將資料傳遞並跳轉到另一個頁面
-
-            showInferenceData(parsedData);
-            navigate('/inferenceResult');
 
         } catch (error) {
             console.log(error);
