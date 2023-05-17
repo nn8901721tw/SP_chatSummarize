@@ -16,7 +16,6 @@ function runPythonScript(inputData) {
     return output.toString();
 }
 
-
 //NLP MODEL_exec
 router.get('/inference', async (req, res) => {
     const { to, user } = req.query;       //接收到的user為 Json string 格式
@@ -148,49 +147,49 @@ router.get('/process', async (req, res) => {
 router.get('/wordCloud', async (req, res) => {
     const { to } = req.query;
     console.log(to);
+
     try {
-        const messages = await Message.find({ to }, 'content');
-        res.send(messages);
+        const messages = await Message.find({ to }, 'from.name content');
+        const inputData = {
+            text: messages.reduce((accumulator, message) => {
+                return `${accumulator}${message.from.name}: ${message.content} `;
+            }, "")
+        };
+        console.log(inputData);
 
         const contents = messages.map(message => message.content);
+        console.log(contents)
+        console.log(typeof contents)
 
         // 將收到的訊息轉成文字檔
-        fs.writeFileSync('D:/user/Desktop/MERN/mernchat/python1/img/data.txt', JSON.stringify(contents));
-        // 將數據作為JSON字符串傳遞給Python腳本
+        fs.writeFileSync(path.join(__dirname, '../../python1/img/data2.txt'), contents.join('\n'));
 
-        const pythonProcess = spawn('python', ['D:/user/Desktop/MERN/mernchat/python1/word123.py', JSON.stringify(contents)]);
+        // 執行Python腳本，生成文字雲並返回圖片路徑
+        const pythonProcess = spawn('python', [path.join(__dirname, '../../python1/wc.py')]);
 
-        pythonProcess.stdout.on('data', (data) => {
-            console.log(`Python output: ${data}`);
+        pythonProcess.stdout.on('data', data => {
+            const imagePath = path.join(data.toString().trim());
+            console.log(imagePath)
+            console.log('Wordcloud image path:', imagePath);
 
+            // 將圖片轉換為 Base64 字符串
+            const base64Image = getImageAsBase64(imagePath);
+            console.log(base64Image);
+
+            // 返回圖片的 Base64 字符串
+            res.send(base64Image);
         });
 
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`);
-        });
-
-        // pythonProcess.on('close', (code) => {
-        //     if (code === 0) {
-        //         const imagePath = path.join(__dirname, '../../python1/img/wordcloud.png');
-        //         if (fs.existsSync(imagePath)) {
-        //             const imageData = fs.readFileSync(imagePath);
-        //             // 將圖片資料回傳給前端
-        //             res.set('Content-Type', 'image/png');
-        //             res.send(imageData);
-        //         } else {
-        //             console.error('Wordcloud image not found');
-        //             res.sendStatus(404);
-        //         }
-        //     } else {
-        //         console.error(`Python process exited with code ${code}`);
-        //         res.sendStatus(500);
-        //     }
-        // });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send(err);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal server error');
     }
 });
 
+function getImageAsBase64(imagePath) {
+    const imageData = fs.readFileSync(imagePath);
+    const base64Image = Buffer.from(imageData).toString('base64');
+    return base64Image;
+};
 
 module.exports = router

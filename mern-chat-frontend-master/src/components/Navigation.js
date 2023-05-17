@@ -29,6 +29,9 @@ function Navigation() {
                                 <Nav.Link>Login</Nav.Link>
                             </LinkContainer>
                         )}
+                        <LinkContainer to="/addTopic">
+                            <Nav.Link>Add Topic</Nav.Link>
+                        </LinkContainer>
                         <LinkContainer to="/chat">
                             <Nav.Link>Chat</Nav.Link>
                         </LinkContainer>

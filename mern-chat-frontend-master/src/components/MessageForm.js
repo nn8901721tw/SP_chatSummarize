@@ -13,9 +13,11 @@ import HandleClickInference from './handleClickInference';
 function MessageForm() {
     const [inferenceLoading, setInferenceLoading] = useState(false);
     const [inferenceData, setInferenceData] = useState(null); // 新增一個狀態 data
+    const [wordcloudLoading, setWordcloudLoading] = useState(false);
+    const [wordcloudData, setWordcloudData] = useState(null);// 新增一個狀態 data
     const [message, setMessage] = useState("");
     const user = useSelector((state) => state.user);
-    const { socket, currentRoom, setMessages, messages, privateMemberMsg, showInferenceData } = useContext(AppContext);
+    const { socket, currentRoom, setMessages, messages, privateMemberMsg, showInferenceData, showWordcloudData } = useContext(AppContext);
     const messageEndRef = useRef(null);
     let navigate = useNavigate();
 
@@ -92,7 +94,7 @@ function MessageForm() {
 
 
 
-            // navigate(`/inferenceResult?currentRoom=${currentRoom}`);
+            navigate(`/inferenceResult?currentRoom=${currentRoom}`);
 
         } catch (error) {
             console.log(error);
@@ -100,24 +102,34 @@ function MessageForm() {
         }
     }
 
-    //  wordcloud click
+    //  Wordcloud click
     async function handleClickWordcloud() {
         try {
-            // setIsLoading(true);
-            // const response = await axios.get('http://localhost:5001/admin/wordCloud?to=' + currentRoom);
-            // const data = response.data;
-            // const contents = data.map(message => message.content);
-            // console.log(contents);
-            // console.log(typeof (contents));
-            // setIsLoading(false);
-            // 處理從後端獲取的資料
+            setWordcloudLoading(true);
+            const response = await axios.get('http://localhost:5001/admin/wordCloud?to=' + currentRoom);
+            console.log(response.data);
+            if (response.data) {
+                // response.data 有值
+                const imagePath = response.data; // 從後端獲取圖片路徑
 
-
-
+                navigate('/wordcloudResult', { state: { imagePath } });
+            } else {
+                // response.data 為空或未定義
+                console.log('Response data is empty');
+            }
 
         } catch (error) {
-            console.log(error);
-            // 處理錯誤
+            if (error.response) {
+                // 伺服器回傳錯誤狀態碼
+                console.log('Server Error:', error.response.status);
+                console.log('Error Response:', error.response.data);
+            } else if (error.request) {
+                // 請求已發出，但沒有收到回應
+                console.log('No Response:', error.request);
+            } else {
+                // 發生錯誤時的其他情況
+                console.log('Error:', error.message);
+            }
         }
     }
 
@@ -177,7 +189,7 @@ function MessageForm() {
                     {/* <HandleClickInference currentRoom={currentRoom} /> */}
 
                     <Col md={1}>
-                        <Button variant="danger" onClick={handleClickWordcloud}> WORDCLOUD </Button>
+                        <Button variant="danger" onClick={handleClickWordcloud} disabled={wordcloudLoading}> {wordcloudLoading ? 'Loading...' : 'WORDCLOUD'} </Button>
                     </Col>
                 </Row>
             </Form>
