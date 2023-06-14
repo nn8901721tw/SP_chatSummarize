@@ -31,3 +31,8 @@
     cursor: pointer;
     z-index: 99;
 }
+
+.signup-heading {
+    margin-top: 30px;
+    /* 将元素下移 20px */
+}

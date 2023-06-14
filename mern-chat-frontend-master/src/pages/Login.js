@@ -27,7 +27,13 @@ function Login() {
     return (
         <Container>
             <Row>
-                <Col md={5} className="login__bg"></Col>
+                <Col md={5} className="d-flex align-items-center justify-content-center">
+                    <div className="embed-responsive embed-responsive-16by9">
+                        <video className="embed-responsive-item" autoPlay loop muted>
+                            <source src="https://cdn-icons-mp4.flaticon.com/512/8716/8716890.mp4" type="video/mp4" />
+                        </video>
+                    </div>
+                </Col>
                 <Col md={7} className="d-flex align-items-center justify-content-center flex-direction-column">
                     <Form style={{ width: "80%", maxWidth: 500 }} onSubmit={handleLogin}>
                         <Form.Group className="mb-3" controlId="formBasicEmail">

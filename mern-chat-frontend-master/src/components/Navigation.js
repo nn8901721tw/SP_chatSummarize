@@ -3,57 +3,66 @@ import { Nav, Navbar, Container, Button, NavDropdown } from "react-bootstrap";
 import { useLogoutUserMutation } from "../services/appApi";
 import { useSelector } from "react-redux";
 import { LinkContainer } from "react-router-bootstrap";
-import logo from "../assets/logo.png";
+import logo from "../assets/SMCR_logo.png";
+import "./Navigation.css";
+
 function Navigation() {
     const user = useSelector((state) => state.user);
     const [logoutUser] = useLogoutUserMutation();
+
     async function handleLogout(e) {
         e.preventDefault();
         await logoutUser(user);
         // redirect to home page
         window.location.replace("/");
     }
+
     return (
-        <Navbar bg="light" expand="lg">
+        <Navbar expand="lg" className="navbar-custom">
             <Container>
                 <LinkContainer to="/">
                     <Navbar.Brand>
-                        <img src={logo} style={{ width: 50, height: 50 }} />
+                        <img src={logo} alt="Logo" className="navbar-logo" />
                     </Navbar.Brand>
                 </LinkContainer>
-                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Toggle aria-controls="basic-navbar-nav" className="navbar-toggle" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="ms-auto">
                         {!user && (
                             <LinkContainer to="/login">
-                                <Nav.Link>Login</Nav.Link>
+                                <Nav.Link className="navbar-link">Login</Nav.Link>
                             </LinkContainer>
                         )}
+                        <LinkContainer to="/Statistics">
+                            <Nav.Link>Statistics</Nav.Link>
+                        </LinkContainer>
                         <LinkContainer to="/addTopic">
-                            <Nav.Link>Add Topic</Nav.Link>
+                            <Nav.Link className="navbar-link">Add Topic</Nav.Link>
                         </LinkContainer>
                         <LinkContainer to="/chat">
-                            <Nav.Link>Chat</Nav.Link>
+                            <Nav.Link className="navbar-link">Chat</Nav.Link>
                         </LinkContainer>
                         <LinkContainer to="/Process">
-                            <Nav.Link>Process</Nav.Link>
+                            <Nav.Link className="navbar-link">Process</Nav.Link>
                         </LinkContainer>
                         {user && (
                             <NavDropdown
                                 title={
                                     <>
-                                        <img src={user.picture} style={{ width: 30, height: 30, marginRight: 10, objectFit: "cover", borderRadius: "50%" }} />
+                                        <img src={user.picture} alt="User" className="navbar-user-image" />
                                         {user.name}
                                     </>
                                 }
                                 id="basic-nav-dropdown"
+                                align="end"
+                                className="navbar-dropdown"
                             >
                                 <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
                                 <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
                                 <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
-
+                                <NavDropdown.Divider />
                                 <NavDropdown.Item>
-                                    <Button variant="danger" onClick={handleLogout}>
+                                    <Button variant="danger" onClick={handleLogout} className="navbar-logout-button">
                                         Logout
                                     </Button>
                                 </NavDropdown.Item>

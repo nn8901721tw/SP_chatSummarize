@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const TopicSchema = new mongoose.Schema({
-    name: String,
-    password: String,
+    topicName: String,
+    roomKey: String,
 })
 
 const Topic = mongoose.model('Topic', TopicSchema);

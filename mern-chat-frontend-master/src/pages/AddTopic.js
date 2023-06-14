@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import axios from "axios";
+import Swal from "sweetalert2";
 import Sidebar from "../components/Sidebar";
 import "./AddTopic.css";
 
@@ -16,9 +18,39 @@ function AddTopic() {
         setName(e.target.value);
     };
 
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        // 处理表单提交逻辑
+
+        Swal.fire({
+            title: '確定要創立該議題?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '確定',
+            cancelButtonText: '取消',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // 處理表單提交逻辑
+                const formData = {
+                    topicName: name,
+                    roomKey: password,
+                };
+                axios.post('http://localhost:5001/admin/topics', formData)
+                    .then((response) => {
+                        // 成功處理回應
+                        Swal.fire('成功', '議題創建成功', 'success');
+                        // 重置表單
+                        setName('');
+                        setPassword('');
+                    })
+                    .catch((error) => {
+                        // 處理錯誤回應
+                        Swal.fire('錯誤', '發生錯誤，無法創建議題', 'error');
+                        console.error(error);
+                    });
+            }
+        });
     };
 
     return (
@@ -56,7 +88,11 @@ function AddTopic() {
 
                         <Row className="add-topic-button-row">
                             <Col sm={6} className="d-flex">
-                                <Button variant="secondary" onClick={generatePassword} className="flex-grow-1">
+                                <Button
+                                    variant="secondary"
+                                    onClick={generatePassword}
+                                    className="flex-grow-1"
+                                >
                                     Generate Password
                                 </Button>
                             </Col>

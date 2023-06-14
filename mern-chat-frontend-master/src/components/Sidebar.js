@@ -37,6 +37,9 @@ function Sidebar() {
             socket.emit("new-user");
         }
     }, []);
+    useEffect(() => {
+        getRooms();
+    }, [setRooms]);
 
     socket.off("new-user").on("new-user", (payload) => {
         setMembers(payload);

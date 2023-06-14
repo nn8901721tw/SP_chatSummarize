@@ -15,6 +15,7 @@ function MessageForm() {
     const [inferenceData, setInferenceData] = useState(null); // 新增一個狀態 data
     const [wordcloudLoading, setWordcloudLoading] = useState(false);
     const [wordcloudData, setWordcloudData] = useState(null);// 新增一個狀態 data
+    const [combineLoading, setCombineLoading] = useState(false);
     const [message, setMessage] = useState("");
     const user = useSelector((state) => state.user);
     const { socket, currentRoom, setMessages, messages, privateMemberMsg, showInferenceData, showWordcloudData } = useContext(AppContext);
@@ -74,10 +75,10 @@ function MessageForm() {
             params.append('to', currentRoom);
             params.append('user', JSON.stringify(user));
 
-            const response = await axios.get(`http://localhost:5001/admin/inference?${params.toString()}`);
+            const INF_response = await axios.get(`http://localhost:5001/admin/inference?${params.toString()}`);
 
 
-            const data = response;
+            const data = INF_response;
 
             // console.log(typeof (data));
             const parsedData = data; // 將 string 轉換為物件
@@ -106,32 +107,70 @@ function MessageForm() {
     async function handleClickWordcloud() {
         try {
             setWordcloudLoading(true);
-            const response = await axios.get('http://localhost:5001/admin/wordCloud?to=' + currentRoom);
-            console.log(response.data);
-            if (response.data) {
-                // response.data 有值
-                const imagePath = response.data; // 從後端獲取圖片路徑
+            const WC_response = await axios.get('http://localhost:5001/admin/wordCloud?to=' + currentRoom);
+            const { base64Image, imagePath } = WC_response.data;
 
-                navigate('/wordcloudResult', { state: { imagePath } });
+            if (WC_response.data) {
+                // response.data 有值
+                const imagePath = WC_response.data; // 從後端獲取圖片路徑
+
+                navigate('/wordcloudResult', { state: { base64Image, imagePath } });
             } else {
-                // response.data 為空或未定義
-                console.log('Response data is empty');
+                // WC_response.data 為空或未定義
+                console.log('WC_response data is empty');
             }
 
         } catch (error) {
-            if (error.response) {
+            if (error.WC_response) {
                 // 伺服器回傳錯誤狀態碼
-                console.log('Server Error:', error.response.status);
-                console.log('Error Response:', error.response.data);
+                console.log('Server Error:', error.WC_response.status);
+                console.log('Error WC_response:', error.WC_response.data);
             } else if (error.request) {
                 // 請求已發出，但沒有收到回應
-                console.log('No Response:', error.request);
+                console.log('No WC_response:', error.request);
             } else {
                 // 發生錯誤時的其他情況
                 console.log('Error:', error.message);
             }
         }
     }
+
+    async function handleClickCombined() {
+        try {
+            setCombineLoading(true);
+            const paramss = new URLSearchParams();
+            paramss.append('to', currentRoom);
+            paramss.append('user', JSON.stringify(user));
+
+            const INF_response = await axios.get(`http://localhost:5001/admin/inference?${paramss.toString()}`);
+            const WC_response = await axios.get('http://localhost:5001/admin/wordCloud?to=' + currentRoom);
+            const { base64Image, imagePath } = WC_response.data;
+
+            const WC_data = WC_response.data;
+            const INF_data = INF_response;
+            const INF_parsedData = INF_data; // 將 string 轉換為物件
+
+            // console.log(INF_parsedData); // 印出轉換後的物件
+            setInferenceData(INF_parsedData);
+            setCombineLoading(false);
+            showInferenceData(INF_parsedData);
+
+
+            navigate(`/combineResult?currentRoom=${currentRoom}`, { state: { base64Image, imagePath } });
+
+
+        } catch (error) {
+            if (error.response) {
+                console.log('Server Error:', error.response.status);
+                console.log('Error response:', error.response.data);
+            } else if (error.request) {
+                console.log('No response:', error.request);
+            } else {
+                console.log('Error:', error.message);
+            }
+        }
+    }
+
 
     return (
         <>
@@ -183,13 +222,17 @@ function MessageForm() {
 
                 </Row>
                 <Row>
-                    <Col md={2}>
+                    <Col md={3}>
                         <Button variant="primary" onClick={handleClickInference} disabled={inferenceLoading}> {inferenceLoading ? 'Loading...' : 'INFERENCE'} </Button>
                     </Col>
                     {/* <HandleClickInference currentRoom={currentRoom} /> */}
 
-                    <Col md={1}>
+                    <Col md={3}>
                         <Button variant="danger" onClick={handleClickWordcloud} disabled={wordcloudLoading}> {wordcloudLoading ? 'Loading...' : 'WORDCLOUD'} </Button>
+                    </Col>
+
+                    <Col md={3}>
+                        <Button variant="success" onClick={handleClickCombined} disabled={combineLoading}> {combineLoading ? 'Loading...' : 'GENERATE'} </Button>
                     </Col>
                 </Row>
             </Form>

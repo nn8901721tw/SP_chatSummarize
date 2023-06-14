@@ -7,12 +7,14 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Chat from "./pages/Chat";
 import Process from "./pages/Process";
+import Statistics from "./pages/Statistics";
 import AddTopic from "./pages/AddTopic";
 import { useSelector } from "react-redux";
 import { useState } from "react";
 import { AppContext, socket } from "./context/appContext";
 import InferenceResult from './pages/InferenceResult';
 import WordcloudResult from "./pages/WordcloudResult";
+import CombineResult from "./pages/CombineResult";
 
 function App() {
     const [rooms, setRooms] = useState([]);
@@ -37,9 +39,11 @@ function App() {
                     )}
                     <Route path="/chat" element={<Chat />} />
                     <Route path="/process" element={<Process />} />
+                    <Route path="/statistics" element={<Statistics />} />
                     <Route path="/addTopic" element={<AddTopic />} />
                     <Route path="/inferenceResult" props={InferenceResult} element={<InferenceResult />} />
                     <Route path="/wordcloudResult" props={WordcloudResult} element={<WordcloudResult />} />
+                    <Route path="/combineResult" props={CombineResult} element={<CombineResult />} />
                 </Routes>
             </BrowserRouter>
         </AppContext.Provider>

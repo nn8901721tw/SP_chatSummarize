@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const Message = require('../models/Message');
 const Process = require('../models/Process');
+const Statistics = require('../models/Statistics');
+const Topic = require('../models/Topic');
 const { spawn } = require('child_process');
 const { exec } = require('child_process');
 const execSync = require("child_process").execSync;
@@ -14,7 +16,49 @@ function runPythonScript(inputData) {
     const command = `python ${pythonScriptPath} "${JSON.stringify(inputData).replace(/"/g, '\\"')}"`;
     const output = execSync(command);
     return output.toString();
-}
+};
+
+// Generate 後 ，跳出SWEETALERT後，儲存mongodb
+router.post('/resultsave', async (req, res) => {
+    try {
+        const { to, user, imagesrc, infresult } = req.body; // 使用req.body取得POST請求中的參數
+
+        const formattedUser = JSON.parse(user); // 不需要使用JSON.parse解析，因為req.body中的參數已經是JSON物件
+
+        console.log("userData為" + formattedUser);
+        const { name, email, status, _id, __v } = formattedUser;
+        const from = {
+            name,
+            email,
+            status,
+            _id,
+            __v
+        };
+
+        console.log("format :  是" + typeof formattedUser + name + "END");
+        console.log("NOW  :" + imagesrc);
+        const currentTime = Date.now();
+
+        const newProcess = await Process.create({
+            result: infresult,
+            from,
+            to,
+            imageSrc: imagesrc, // 使用小寫的imagesrc參數名稱
+            createdAt: currentTime
+        });
+
+        console.log("1");
+
+        // 返回成功响应
+        res.status(200).json({ message: 'Result saved successfully' });
+    } catch (error) {
+        // 处理错误情况
+        console.error('Error:', error.message);
+        res.status(500).json({ error: 'An error occurred' });
+    }
+});
+
+
 
 //NLP MODEL_exec
 router.get('/inference', async (req, res) => {
@@ -44,23 +88,79 @@ router.get('/inference', async (req, res) => {
         };
         console.log("format :  是" + typeof (formattedUser) + name + "END");
 
-        const currentTime = Date.now();
 
-        const newProcess = await Process.create({
-            result: output,
-            from: formattedUser,
-            to,
-            createdAt: currentTime
-        });
+        // 將值存入process table
+
+        // const currentTime = Date.now();
+
+        // const newProcess = await Process.create({
+        //     result: output,
+        //     from: formattedUser,
+        //     to,
+        //     createdAt: currentTime
+        // });
 
 
-        console.log(newProcess);
+        // console.log(newProcess);
+
+        // 在這裡處理回傳的結果
+        const newStatistics = await Message.aggregate([
+            {
+                $group: {
+                    _id: '$from.name',
+                    name: { $first: '$from.name' }, // 保留 from.name 的值
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+        console.log(newStatistics);
 
         // 在這裡處理回傳的結果
         res.send(output);
     } catch (error) {
         console.log(error);
         res.status(500).send('Error running Python script');
+    }
+});
+
+// 呈現後的結果 ，在 Statistics Component 呈現 。
+router.get('/statistics', async (req, res) => {
+    const { fromId, to } = req.query;
+
+    try {
+        let query = {};
+        if (fromId) {
+            query = { 'from._id': fromId };
+        }
+
+        const matchCondition = {};
+        if (to) {
+            matchCondition.to = to;
+        }
+
+        const messageData = await Message.aggregate([
+            { $match: matchCondition },
+            {
+                $group: {
+                    _id: '$from.name',
+                    name: { $first: '$from.name' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const statisticsData = messageData.map(({ _id, name, count }) => ({
+            from: { name: name },
+            count
+        }));
+
+        await Statistics.deleteMany(); // 先清空舊的統計資料
+        await Statistics.insertMany(statisticsData); // 插入新的統計資料
+
+        res.json(statisticsData);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Error retrieving and saving statistics data');
     }
 });
 
@@ -82,66 +182,18 @@ router.get('/process', async (req, res) => {
         res.status(500).send('Error retrieving Process data');
     }
 });
+// 刪除特定的 Process 資料
+router.delete('/process/:processId', async (req, res) => {
+    const { processId } = req.params;
 
-
-
-// NLP MODEL _spawn
-// router.get('/inference', async (req, res) => {
-//     const { to } = req.query;
-//     console.log(to);
-//     try {
-
-//         const messages = await Message.find({ to }, 'from.name content');
-//         const inputData = {
-//             text: messages.reduce((accumulator, message) => {
-//                 return `${accumulator}${message.from.name}: ${message.content} `;
-//             }, '')
-//         };
-//         console.log(inputData);
-//         console.log(typeof (inputData));
-
-//         const pythonScriptPath = path.join(__dirname, '../../python1/model.py');
-//         const pythonProcess = spawn('python', [pythonScriptPath, JSON.stringify(inputData)]);
-
-//         let data1 = "";
-//         pythonProcess.stdout.on('data', (data) => {
-//             console.log(`Python output: ${data}`);
-//             data1 = data;
-//         });
-
-//         const redirectUrl = '/chat/inferenceResult';
-//         pythonProcess.stdout.on('end', () => {
-//             console.log(`Python process exited with code 0 and output: ${data1}`);
-//             res.send("data1");
-//             // try {
-//             //     const inferenceResult = JSON.parse(data1);
-//             //     const resultData = {
-//             //         data: inferenceResult,
-//             //         messages: messages.map((message) => {
-//             //             return {
-//             //                 from: message.from.name,
-//             //                 content: message.content
-//             //             };
-//             //         })
-//             //     };
-//             //     res.json(resultData);
-//             // } catch (error) {
-//             //     console.error(`Error parsing inference result: ${error}`);
-//             //     res.status(500).send({ error: 'Error parsing inference result.' });
-//             // }
-//         });
-
-
-// //     } catch (err) {
-// //         console.error(err);
-// //         res.status(500).send(err);
-// //     }
-// // });
-
-
-
-
-
+    try {
+        await Process.findByIdAndRemove(processId);
+        res.json({ message: 'Process data deleted successfully' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Error deleting Process data');
+    }
+});
 
 // wordcloud
 router.get('/wordCloud', async (req, res) => {
@@ -174,10 +226,16 @@ router.get('/wordCloud', async (req, res) => {
 
             // 將圖片轉換為 Base64 字符串
             const base64Image = getImageAsBase64(imagePath);
-            console.log(base64Image);
+            // console.log(base64Image);
+            console.log("imagePath!!!!" + imagePath);
+            // 構建回應物件
+            const response = {
+                base64Image: base64Image,
+                imagePath: imagePath
+            };
 
-            // 返回圖片的 Base64 字符串
-            res.send(base64Image);
+            // 返回回應物件的 JSON 格式
+            res.json(response);
         });
 
     } catch (error) {
@@ -186,10 +244,28 @@ router.get('/wordCloud', async (req, res) => {
     }
 });
 
+// 將圖片轉成base64
 function getImageAsBase64(imagePath) {
     const imageData = fs.readFileSync(imagePath);
     const base64Image = Buffer.from(imageData).toString('base64');
     return base64Image;
 };
+
+
+router.post('/topics', async (req, res) => {
+    const { topicName, roomKey } = req.body;
+
+    try {
+        const newTopic = new Topic({ topicName, roomKey });
+        await newTopic.save();
+
+        res.status(201).json(newTopic);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Error creating topic');
+    }
+});
+
+
 
 module.exports = router

@@ -29,10 +29,10 @@ function Signup() {
     async function uploadImage() {
         const data = new FormData();
         data.append("file", image);
-        data.append("upload_preset", "your-preset-here");
+        data.append("upload_preset", "SP_mernchat");
         try {
             setUploadingImg(true);
-            let res = await fetch("https://api.cloudinary.com/v1_1/your-username-here/image/upload", {
+            let res = await fetch("https://api.cloudinary.com/v1_1/dsmuzprik/image/upload", {
                 method: "post",
                 body: data,
             });
@@ -64,7 +64,7 @@ function Signup() {
             <Row>
                 <Col md={7} className="d-flex align-items-center justify-content-center flex-direction-column">
                     <Form style={{ width: "80%", maxWidth: 500 }} onSubmit={handleSignup}>
-                        <h1 className="text-center">Create account</h1>
+                        <h1 className="text-center signup-heading">Create account</h1>
                         <div className="signup-profile-pic__container">
                             <img src={imagePreview || botImg} className="signup-profile-pic" />
                             <label htmlFor="image-upload" className="image-upload-label">
@@ -97,7 +97,13 @@ function Signup() {
                         </div>
                     </Form>
                 </Col>
-                <Col md={5} className="signup__bg"></Col>
+                <Col md={5} className="d-flex align-items-center justify-content-center">
+                    <div className="embed-responsive embed-responsive-16by9">
+                        <video className="embed-responsive-item" autoPlay loop muted>
+                            <source src="https://cdn-icons-mp4.flaticon.com/512/8716/8716852.mp4" type="video/mp4" />
+                        </video>
+                    </div>
+                </Col>
             </Row>
         </Container>
     );

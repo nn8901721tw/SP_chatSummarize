@@ -1,0 +1,44 @@
+.image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.wordcloud-image {
+    width: 150px;
+    transition: transform 0.3s;
+}
+
+.hover-overlay {
+    position: absolute;
+    /* 將 position 改為 absolute */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.hover-overlay:hover {
+    opacity: 1;
+}
+
+.zoomed-image {
+    width: 200px;
+    /* 調整放大圖片的大小 */
+    transform: scale(2);
+    /* 調整放大倍率 */
+    transition: transform 0.3s;
+}
+
+.hover-overlay:hover .zoomed-image {
+    transform: scale(2.5);
+    /* 調整放大倍率 */
+}
