@@ -71,7 +71,7 @@ function Sidebar() {
 
     return (
         <>
-            <h2>Available rooms</h2>
+            <h2>List of Topics</h2>
             <ListGroup>
                 {rooms.map((room, idx) => (
                     <ListGroup.Item key={uuidv4()} onClick={() => joinRoom(room)} active={room == currentRoom} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between" }}>

@@ -1,0 +1,17 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./mern-chat-frontend-master
+    ports:
+      - "3000:3000"
+  backend:
+    build:
+      context: ./mern-chat-backend-main
+    ports:
+      - "5001:5001"
+  nlp:
+    build:
+      context: ./python1
+    # 將需要的環境變數配置在這裡
+

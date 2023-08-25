@@ -9,10 +9,21 @@ const Topic = require('./models/Topic'); // 引入 Topic 模型
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+
+// app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }));
+// 增加主體大小限制
+app.use(bodyParser.urlencoded({ limit: '200mb', extended: true }));
+app.use(bodyParser.json({ limit: '200mb' }));
+
+// 解決 CORS 問題
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); // 允許的前端網址
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
 
 app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);

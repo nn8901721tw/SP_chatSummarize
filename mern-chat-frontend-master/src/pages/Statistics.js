@@ -9,11 +9,12 @@ function Statistics() {
     const user = useSelector((state) => state.user);
     const userID = user && user._id;
     console.log(userID);
+    const [topics, setTopics] = useState([]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         if (user && user._id) {
             fetchStatisticsData();
+            fetchTopics();
         }
     }, [user, filterValue]);
 
@@ -22,7 +23,7 @@ function Statistics() {
             const response = await axios.get('http://localhost:5001/admin/statistics', {
                 params: {
                     fromId: userID,
-                    to: filterValue // 將 filterValue 作為參數傳遞給後端
+                    to: filterValue
                 },
             });
             const data = response.data;
@@ -36,16 +37,25 @@ function Statistics() {
         }
     }
 
+    async function fetchTopics() {
+        try {
+            const response = await axios.get('http://localhost:5001/admin/topics');
+            const data = response.data;
+            const topicNames = data.map((topic) => topic.topicName);
+            setTopics(topicNames);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     return (
         <div>
             <h2>Statistics</h2>
             <select value={filterValue} onChange={(e) => setFilterValue(e.target.value)}>
                 <option value="">All</option>
-                <option value="general">general</option>
-                <option value="tech">tech</option>
-                <option value="finance">finance</option>
-                <option value="crypto">crypto</option>
-                <option value="data">data</option>
+                {topics.map((topic, index) => (
+                    <option key={index} value={topic}>{topic}</option>
+                ))}
             </select>
 
             <Table striped bordered hover>

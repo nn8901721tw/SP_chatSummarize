@@ -11,12 +11,7 @@ const fs = require('fs');
 const path = require('path');
 
 
-function runPythonScript(inputData) {
-    const pythonScriptPath = path.join(__dirname, '../../python1/model.py');
-    const command = `python ${pythonScriptPath} "${JSON.stringify(inputData).replace(/"/g, '\\"')}"`;
-    const output = execSync(command);
-    return output.toString();
-};
+
 
 // Generate 後 ，跳出SWEETALERT後，儲存mongodb
 router.post('/resultsave', async (req, res) => {
@@ -59,7 +54,12 @@ router.post('/resultsave', async (req, res) => {
 });
 
 
-
+function runPythonScript(inputData) {
+    const pythonScriptPath = path.join(__dirname, '../../python1/model.py');
+    const command = `python ${pythonScriptPath} "${JSON.stringify(inputData).replace(/"/g, '\\"')}"`;
+    const output = execSync(command);
+    return output.toString();
+};
 //NLP MODEL_exec
 router.get('/inference', async (req, res) => {
     const { to, user } = req.query;       //接收到的user為 Json string 格式
@@ -154,8 +154,8 @@ router.get('/statistics', async (req, res) => {
             count
         }));
 
-        await Statistics.deleteMany(); // 先清空舊的統計資料
-        await Statistics.insertMany(statisticsData); // 插入新的統計資料
+        // await Statistics.deleteMany(); // 先清空舊的統計資料
+        // await Statistics.insertMany(statisticsData); // 插入新的統計資料
 
         res.json(statisticsData);
     } catch (error) {
@@ -166,13 +166,17 @@ router.get('/statistics', async (req, res) => {
 
 // 呈現 Inference後的結果 ，在 Process Component 呈現 。
 router.get('/process', async (req, res) => {
-    const { fromId } = req.query;
+    const { fromId, to } = req.query;
 
     try {
         let query = {};
 
         if (fromId) {
-            query = { 'from._id': fromId };
+            query['from._id'] = fromId;
+        }
+
+        if (to) {
+            query['to'] = to;
         }
 
         const processData = await Process.find(query);
@@ -182,6 +186,7 @@ router.get('/process', async (req, res) => {
         res.status(500).send('Error retrieving Process data');
     }
 });
+
 // 刪除特定的 Process 資料
 router.delete('/process/:processId', async (req, res) => {
     const { processId } = req.params;
@@ -266,6 +271,15 @@ router.post('/topics', async (req, res) => {
     }
 });
 
+router.get('/topics', async (req, res) => {
+    try {
+        const topics = await Topic.find({}, 'topicName');
+        res.json(topics);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
 
 module.exports = router
